@@ -1,0 +1,7 @@
+numpy<2.0.0
+scipy
+PyQt5
+scikit-image
+matplotlib
+Pillow<11.0.0
+qtawesome
