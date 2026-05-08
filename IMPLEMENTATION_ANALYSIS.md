@@ -513,3 +513,52 @@ for i, psnr in enumerate(psnr_fbp):
 | Scenario 3 threshold | `gui/workers.py` | MEDIUM | ☐ |
 | UI controls update | `gui/components.py` | LOW | ☐ |
 | **Add logging** | **All core modules** | **HIGH** | **✓** |
+| **Add UI controls** | `gui/tabs.py` | **HIGH** | **✓** |
+
+---
+
+### 5.11 Enhanced UI Controls Summary
+
+#### Scenario 1 - Dose vs. Noise Trade-off
+
+| Control | Type | Default | Description |
+|---------|------|---------|-------------|
+| FBP Filter | ComboBox | hann | Filter kernel: ramp, shepp-logan, hann, hamming, cosine |
+| **Projection Angles** | SpinBox | 720 | Number of view angles (18-720) |
+| **Dose Min** | SpinBox | 2 | Minimum exponent (10^x) |
+| **Dose Max** | SpinBox | 6 | Maximum exponent (10^x) |
+| **Random Seed** | SpinBox | 42 | For reproducible noise (0=random) |
+
+#### Scenario 2 - TV Regularization
+
+| Control | Type | Default | Description |
+|---------|------|---------|-------------|
+| FBP Filter | ComboBox | hann | Filter for baseline FBP |
+| **Projection Angles** | SpinBox | 720 | Number of view angles (36-720) |
+| **Baseline Dose I0** | SpinBox | 3 | Exponent for noisy baseline (10^x) |
+| TV Iterations | SpinBox | 100 | Gradient descent steps |
+| TV Step Size | DoubleSpinBox | 0.05 | Learning rate |
+| **Lambda Values** | Text | 0.01, 0.05, 0.1, 0.5, 1.0 | Custom comma-separated λ values |
+
+#### Scenario 3 - Sparse Sampling
+
+| Control | Type | Default | Description |
+|---------|------|---------|-------------|
+| FBP Filter | ComboBox | hann | Convolution kernel |
+| ART Iterations | SpinBox | 3 | Number of passes |
+| ART Relaxation | DoubleSpinBox | 1.0 | Step size (0.1-2.0) |
+
+---
+
+### 5.12 Worker Parameters
+
+The worker threads now accept the following configurable parameters:
+
+**WorkerScenario1:**
+- `n_angles`: Number of projection angles
+- `doses`: List of photon counts to test
+
+**WorkerScenario2:**
+- `n_angles`: Number of projection angles
+- `i0_exponent`: Low dose exponent
+- `custom_lambdas`: User-defined λ values

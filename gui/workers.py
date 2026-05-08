@@ -43,10 +43,12 @@ class WorkerScenario1(QThread):
         iradon_fn = custom_iradon if self.use_custom else iradon
 
         # We use a very dense angular sampling (720 angles over 180 degrees) for the baseline
+        # add these to be controlled by the user later if they want to see the effect of angular sampling as well
         theta = np.linspace(0.0, 180.0, 720, endpoint=False)
         logger.info(f"Number of projection angles: {len(theta)}")
 
         # Test a range of incident photon doses (I0) from very low to high
+        # also add an infinite dose case to show the perfect mathematical sinogram without noise as a baseline and makr this list controllable by the user later if they want to see more or fewer dose levels
         doses = [10**2, 10**3, 10**4, 10**5, 10**6]
         logger.info(f"Testing doses: {doses}")
 
@@ -125,8 +127,8 @@ class WorkerScenario2(QThread):
         self.phantom = phantom
         self.use_custom = use_custom
         self.filter_name = "hann"
-        self.tv_iterations = 200
-        self.tv_step = 0.05
+        self.tv_iterations = 200 #this should be controlled by the user from the UI
+        self.tv_step = 0.05 #this also should be controlled by the user from the ui 
 
     def run(self):
         logger.info("=== Scenario 2: TV Regularization ===")
@@ -136,11 +138,14 @@ class WorkerScenario2(QThread):
         iradon_fn = custom_iradon if self.use_custom else iradon
 
         # Dense sampling baseline
-        theta = np.linspace(0.0, 180.0, 720, endpoint=False)
+        #  this should be controlled by the user from the UI
+        theta = np.linspace(0.0, 180.0, 720, endpoint=False) 
+        #this should be controlled by the user from the UI
         I0_low = 10**3  # Use a relatively low dose to ensure visible noise
         logger.info(f"Low dose I0 = {I0_low}")
 
         # We will test different strengths of the TV regularization parameter (lambda)
+        #this should be controlled by the user from the UI
         lambdas = [0.01, 0.05, 0.1, 0.5, 1.0]
         logger.info(f"Testing lambda values: {lambdas}")
 
@@ -230,8 +235,8 @@ class WorkerScenario3(QThread):
         self.phantom = phantom
         self.use_custom = use_custom
         self.filter_name = "hann"
-        self.art_iterations = 3
-        self.art_relaxation = 1.0
+        self.art_iterations = 3 #this should be controlled by the user from the UI
+        self.art_relaxation = 1.0 #this should be controlled by the user from the UI
 
     def run(self):
         logger.info("=== Scenario 3: Sparse Angular Sampling ===")
@@ -243,15 +248,19 @@ class WorkerScenario3(QThread):
 
         # Define experiment parameters
         # We use a moderate photon count so noise isn't the primary issue, only sparse data
+        #this should be controlled by the user from the UI
         I0_mod = 10**5
 
         # Progressively reduce the number of projection angles (Sparse Sampling)
+        #this should be controlled by the user from the UI
         angles_list = [180, 120, 90, 60, 45, 36, 24, 18]
 
         # We only want to plot these specific subset of angles to avoid overcrowding the UI
+        #this should be controlled by the user from the UI
         viz_angles = [180, 90, 45, 18]
 
         # Create a "perfect" ground truth reference using 720 dense angles and infinite dose
+        #this should be info add to the UI
         logger.info("Generating ground truth reference (720 angles, infinite dose)")
         theta_full = np.linspace(0.0, 180.0, 720, endpoint=False)
         sino_full = simulate_measurements(self.phantom, theta_full, np.inf, radon_fn)
