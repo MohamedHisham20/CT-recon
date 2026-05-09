@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QDoubleSpinBox,
     QLineEdit,
+    QSplitter,
 )
 import qtawesome as qta
 from PyQt5.QtCore import Qt
@@ -98,25 +99,45 @@ class BaseScenarioTab(QWidget):
         self.main_layout = QVBoxLayout(self.main_content)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Scroll Area for right side content
+        # Use a vertical splitter so the top area (images) can scroll
+        # while the bottom area (graph) remains visible and resizable.
+        self.splitter = QSplitter(Qt.Vertical)
+
+        # Top: Scroll Area for images (will hold `self.canvas_img`)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll_content = QWidget()
         self.scroll_inner_layout = QVBoxLayout(self.scroll_content)
+        self.scroll_inner_layout.setAlignment(Qt.AlignTop)
 
         # Setup canvases without borders for clean look inside right pane
         self.canvas_img = MplCanvas(self, width=10, height=7)
         self.canvas_plot = MplCanvas(self, width=10, height=4)
 
+        # Images area should be scrollable (can grow tall); graph is smaller
         self.canvas_img.setMinimumHeight(450)
-        self.canvas_plot.setMinimumHeight(350)
+        self.canvas_plot.setMinimumHeight(150)
 
         self.scroll_inner_layout.addWidget(self.canvas_img)
-        self.scroll_inner_layout.addWidget(self.canvas_plot)
+        self.scroll_content.setLayout(self.scroll_inner_layout)
         self.scroll.setWidget(self.scroll_content)
-        self.main_layout.addWidget(self.scroll)
 
-        # Assemble
+        # Bottom: graph area (kept visible, resizable via splitter)
+        self.bottom_widget = QWidget()
+        self.bottom_layout = QVBoxLayout(self.bottom_widget)
+        self.bottom_layout.setContentsMargins(6, 6, 6, 6)
+        self.bottom_layout.addWidget(self.canvas_plot)
+
+        # Assemble splitter
+        self.splitter.addWidget(self.scroll)
+        self.splitter.addWidget(self.bottom_widget)
+        self.splitter.setChildrenCollapsible(False)
+        # Provide a sensible initial ratio (images larger than graph)
+        self.splitter.setSizes([700, 200])
+
+        self.main_layout.addWidget(self.splitter)
+
+        # Assemble main layout into overall layout
         self.layout.addWidget(self.side_panel)
         self.layout.addWidget(self.main_content)
 
@@ -552,9 +573,23 @@ class TabScenario3(BaseScenarioTab):
             "Scenario 3: FBP vs ART under Sparse Sampling", fontsize=14
         )
 
-        # Dynamic canvas size mapping & Minimum height enforcement for Scroll Area
-        self.canvas_img.fig.set_figheight(4 * len(viz_angles))
-        self.canvas_img.setMinimumHeight(350 * len(viz_angles))
+        # Dynamic canvas size mapping & enforce canvas pixel height so scroll area
+        # shows the full figure (prevents internal cropping when many rows).
+        fig_h_in = 4 * len(viz_angles)
+        self.canvas_img.fig.set_figheight(fig_h_in)
+        # Calculate pixel height from figure size and DPI and enforce widget height
+        height_px = int(self.canvas_img.fig.get_figheight() * self.canvas_img.fig.dpi)
+        self.canvas_img.setFixedHeight(max(200, height_px))
+
+        # Make sure the scroll content/layout update to the new canvas size
+        try:
+            self.scroll_content.adjustSize()
+            self.scroll.updateGeometry()
+            # reset scroll to top so user sees first rows
+            if self.scroll.verticalScrollBar() is not None:
+                self.scroll.verticalScrollBar().setValue(0)
+        except Exception:
+            pass
 
         for i, n_angles in enumerate(viz_angles):
             axs[i, 0].imshow(data["recons_fbp"][i], cmap="gray")
