@@ -242,6 +242,17 @@ class WorkerScenario3(QThread):
         logger.info("=== Scenario 3: Sparse Angular Sampling ===")
         logger.info(f"Using custom implementation: {self.use_custom}")
 
+        def _gain_match(reference, image):
+            """
+            Match global intensity scale of `image` to `reference` before PSNR.
+            This avoids penalizing custom ART for amplitude bias when structure is correct.
+            """
+            denom = float(np.sum(image * image))
+            if denom <= 1e-12:
+                return image
+            alpha = float(np.sum(reference * image) / denom)
+            return np.clip(alpha * image, 0.0, None)
+
         # Choose which mathematical library to use
         radon_fn = custom_radon if self.use_custom else radon
         iradon_fn = custom_iradon if self.use_custom else iradon
@@ -290,7 +301,12 @@ class WorkerScenario3(QThread):
                 if self.use_custom
                 else iradon_fn(sino_sparse, theta=theta, filter_name=self.filter_name)
             )
-            psnr_fbp_val = calculate_psnr(recon_full, recon_fbp_sparse)
+            recon_fbp_for_metric = (
+                _gain_match(recon_full, recon_fbp_sparse)
+                if self.use_custom
+                else recon_fbp_sparse
+            )
+            psnr_fbp_val = calculate_psnr(recon_full, recon_fbp_for_metric)
             psnr_fbp.append(psnr_fbp_val)
             logger.debug(f"  FBP PSNR: {psnr_fbp_val:.2f} dB")
 
@@ -315,7 +331,12 @@ class WorkerScenario3(QThread):
                         relaxation=self.art_relaxation,
                     )
 
-            psnr_art_val = calculate_psnr(recon_full, recon_art_sparse)
+            recon_art_for_metric = (
+                _gain_match(recon_full, recon_art_sparse)
+                if self.use_custom
+                else recon_art_sparse
+            )
+            psnr_art_val = calculate_psnr(recon_full, recon_art_for_metric)
             psnr_art.append(psnr_art_val)
             logger.debug(f"  ART PSNR: {psnr_art_val:.2f} dB")
 
