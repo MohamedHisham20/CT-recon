@@ -151,6 +151,9 @@ def custom_art(sinogram, theta, iterations=3, relaxation=1.0):
             # 4. Enforce Non-negativity Constraint (improves stability and artifact reduction)
             recon = np.maximum(recon, 0)
 
+    # Flip the image vertically to match the FBP coordinate system
+    recon = np.flipud(recon)
+
     logger.info(
         f"Custom ART complete: output range [{recon.min():.4f}, {recon.max():.4f}]"
     )
