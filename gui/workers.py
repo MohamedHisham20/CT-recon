@@ -35,6 +35,7 @@ class WorkerScenario1(QThread):
         self.filter_name = "hann"
 
     def run(self):
+        np.random.seed(42)
         logger.info("=== Scenario 1: Dose vs Noise Trade-off ===")
         logger.info(f"Using custom implementation: {self.use_custom}")
 
@@ -131,6 +132,10 @@ class WorkerScenario2(QThread):
         self.tv_step = 0.05 #this also should be controlled by the user from the ui 
 
     def run(self):
+        # Set explicitly to 42 so that the Poisson noise generated inside simulate_measurements
+        # is completely identical each time we run this scenario, leading to fixed, reproducible graphs.
+        np.random.seed(42)
+        
         logger.info("=== Scenario 2: TV Regularization ===")
         logger.info(f"Using custom implementation: {self.use_custom}")
 
@@ -239,6 +244,7 @@ class WorkerScenario3(QThread):
         self.art_relaxation = 1.0 #this should be controlled by the user from the UI
 
     def run(self):
+        np.random.seed(42)
         logger.info("=== Scenario 3: Sparse Angular Sampling ===")
         logger.info(f"Using custom implementation: {self.use_custom}")
 
